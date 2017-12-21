@@ -3,24 +3,34 @@ import urllib2
 import subprocess
 import os
 import sys
+import time
+import signal
 
 
-def run(port):
+def run(port, command):
     version = "2.12.0"
     url = "http://repo1.maven.org/maven2/com/github/tomakehurst/wiremock-standalone/" + version + "/wiremock-standalone-" + version + ".jar"
     file_name = url.split('/')[-1]
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     os.chdir(dir_path)
+    pid_file = os.path.join(dir_path, "pid-" + str(port))
 
     if not os.path.isfile(file_name):
         download_and_show_progress(url, file_name)
 
-    run_jar(file_name, port)
+    if command == "start":
+        run_jar(file_name, port, pid_file)
+        wait_until_port_is_open(port, 5)
+    elif command == "stop":
+        kill_wiremock_process(pid_file)
 
 
-def run_jar(file_name, port):
-    subprocess.call(["java", "-jar", file_name, "--port", str(port)])
+def run_jar(file_name, port, pid_file):
+    proc = subprocess.Popen(["java", "-jar", file_name, "--port", str(port), "&",])
+    f = open(pid_file, "w")
+    f.write(str(proc.pid))
+    f.close()
 
 
 def download_and_show_progress(url, file_name):
@@ -46,9 +56,35 @@ def download_and_show_progress(url, file_name):
     f.close()
 
 
+def wait_until_port_is_open(port, delay):
+    n = 0
+    while n < 5:
+        print "Is application listening on port " + str(port) + "? "
+        returncode = subprocess.call("lsof -P -i TCP:" + str(port) + " > /dev/null", shell=True)
+        if returncode == 0:
+            print "Yes"
+            return
+        print "No. Retrying in " + str(delay) + " seconds"
+        n = n + 1
+        time.sleep(delay)
+
+
+def kill_wiremock_process(pid_file):
+    f = open(pid_file, "r")
+    try:
+        pid_str = f.read()
+        print "Kill wiremock process with pid: " + pid_str
+        os.kill(int(pid_str), signal.SIGTERM)
+    except Exception:
+        f.close()
+        os.remove(pid_file)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        run(int(sys.argv[1]))
+    if len(sys.argv) > 2:
+        port = int(sys.argv[1])
+        command = sys.argv[2]
+        run(port, command)
     else:
         # server on 8222, recording system on 41375
         run(8222)
