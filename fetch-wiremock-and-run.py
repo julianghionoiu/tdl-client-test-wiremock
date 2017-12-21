@@ -7,7 +7,7 @@ import time
 import signal
 
 
-def run(port, command):
+def run(command, port):
     version = "2.12.0"
     url = "http://repo1.maven.org/maven2/com/github/tomakehurst/wiremock-standalone/" + version + "/wiremock-standalone-" + version + ".jar"
     file_name = url.split('/')[-1]
@@ -81,10 +81,6 @@ def kill_wiremock_process(pid_file):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        port = int(sys.argv[1])
-        command = sys.argv[2]
-        run(port, command)
-    else:
-        # server on 8222, recording system on 41375
-        run(8222)
+    command = sys.argv[1]
+    port = int(sys.argv[2])
+    run(command, port)
