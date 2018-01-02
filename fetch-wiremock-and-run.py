@@ -1,10 +1,10 @@
-
-import urllib2
-import subprocess
 import os
+import signal
+import socket
+import subprocess
 import sys
 import time
-import signal
+import urllib2
 
 
 def run(command, port):
@@ -27,7 +27,7 @@ def run(command, port):
 
 
 def run_jar(file_name, port, pid_file):
-    proc = subprocess.Popen(["java", "-jar", file_name, "--port", str(port), "&",])
+    proc = subprocess.Popen(["java", "-jar", file_name, "--port", str(port), "&", ])
     f = open(pid_file, "w")
     f.write(str(proc.pid))
     f.close()
@@ -60,8 +60,9 @@ def wait_until_port_is_open(port, delay):
     n = 0
     while n < 5:
         print "Is application listening on port " + str(port) + "? "
-        returncode = subprocess.call("lsof -P -i TCP:" + str(port) + " > /dev/null", shell=True)
-        if returncode == 0:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex(('127.0.0.1', port))
+        if result == 0:
             print "Yes"
             return
         print "No. Retrying in " + str(delay) + " seconds"
