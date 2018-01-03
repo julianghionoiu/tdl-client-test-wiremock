@@ -6,24 +6,27 @@ import sys
 import time
 import urllib2
 
+SCRIPT_FOLDER = os.path.dirname(os.path.realpath(__file__))
+CACHE_FOLDER = os.path.join(SCRIPT_FOLDER, ".cache")
+
 
 def run(command, port):
+    if not os.path.exists(CACHE_FOLDER):
+        os.mkdir(CACHE_FOLDER)
+
     version = "2.12.0"
     url = "http://repo1.maven.org/maven2/com/github/tomakehurst/wiremock-standalone/" + version + "/wiremock-standalone-" + version + ".jar"
-    file_name = url.split('/')[-1]
+    jar_file = os.path.join(CACHE_FOLDER, url.split('/')[-1])
+    pid_file = os.path.join(CACHE_FOLDER, "pid-" + str(port))
 
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    os.chdir(dir_path)
-    pid_file = os.path.join(dir_path, "pid-" + str(port))
-
-    if not os.path.isfile(file_name):
-        download_and_show_progress(url, file_name)
+    if not os.path.isfile(jar_file):
+        download_and_show_progress(url, jar_file)
 
     if command == "start":
-        run_jar(file_name, port, pid_file)
+        run_jar(jar_file, port, pid_file)
         wait_until_port_is_open(port, 5)
     elif command == "stop":
-        kill_wiremock_process(pid_file)
+        kill_process(pid_file)
 
 
 def run_jar(file_name, port, pid_file):
@@ -70,11 +73,11 @@ def wait_until_port_is_open(port, delay):
         time.sleep(delay)
 
 
-def kill_wiremock_process(pid_file):
+def kill_process(pid_file):
     f = open(pid_file, "r")
     try:
         pid_str = f.read()
-        print "Kill wiremock process with pid: " + pid_str
+        print "Kill process with pid: " + pid_str
         os.kill(int(pid_str), signal.SIGTERM)
     except Exception:
         f.close()
@@ -82,6 +85,6 @@ def kill_wiremock_process(pid_file):
 
 
 if __name__ == "__main__":
-    command = sys.argv[1]
-    port = int(sys.argv[2])
-    run(command, port)
+    _command = sys.argv[1]
+    _port = int(sys.argv[2])
+    run(_command, _port)
