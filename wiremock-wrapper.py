@@ -5,6 +5,7 @@ import subprocess
 import sys
 import time
 import urllib.request, urllib.error, urllib.parse
+import ssl
 
 SCRIPT_FOLDER = os.path.dirname(os.path.realpath(__file__))
 CACHE_FOLDER = os.path.join(SCRIPT_FOLDER, ".cache")
@@ -15,7 +16,7 @@ def run(command, port):
         os.mkdir(CACHE_FOLDER)
 
     version = "2.12.0"
-    url = "http://repo1.maven.org/maven2/com/github/tomakehurst/wiremock-standalone/" + version + "/wiremock-standalone-" + version + ".jar"
+    url = "https://repo1.maven.org/maven2/com/github/tomakehurst/wiremock-standalone/" + version + "/wiremock-standalone-" + version + ".jar"
     jar_file = os.path.join(CACHE_FOLDER, url.split('/')[-1])
     pid_file = os.path.join(CACHE_FOLDER, "pid-" + str(port))
 
@@ -52,7 +53,10 @@ def run_jar(jar_path, port, pid_file, console_mode):
 
 
 def download_and_show_progress(url, file_name):
-    u = urllib.request.urlopen(url)
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    u = urllib.request.urlopen(url, context=ctx)
     f = open(file_name, 'wb')
     meta = u.info()
     file_size = int(meta.get_all("Content-Length")[0])
