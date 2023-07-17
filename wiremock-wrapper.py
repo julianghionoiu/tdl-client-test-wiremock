@@ -41,10 +41,11 @@ def run(command, port):
 
 
 def run_jar(jar_path, port, pid_file, console_mode):
+    JAVA_HOME=os.environ['JAVA_HOME']
     if console_mode:
-        proc = subprocess.call(["java", "-jar", jar_path, "--port", str(port) ], cwd=SCRIPT_FOLDER)
+        proc = subprocess.call([JAVA_HOME+"/bin/java", "-jar", jar_path, "--port", str(port) ], cwd=SCRIPT_FOLDER)
     else:
-        proc = subprocess.Popen(["java", "-jar", jar_path, "--port", str(port), "&", ], cwd=SCRIPT_FOLDER)
+        proc = subprocess.Popen([JAVA_HOME+"/bin/java", "-jar", jar_path, "--port", str(port), "&", ], cwd=SCRIPT_FOLDER)
 
     f = open(pid_file, "w")
     f.write(str(proc.pid))
