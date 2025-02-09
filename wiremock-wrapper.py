@@ -15,7 +15,7 @@ def run(command, port):
     if not os.path.exists(CACHE_FOLDER):
         os.mkdir(CACHE_FOLDER)
 
-    version = "2.12.0"
+    version = "2.27.1"
     url = "https://repo1.maven.org/maven2/com/github/tomakehurst/wiremock-standalone/" + version + "/wiremock-standalone-" + version + ".jar"
     jar_file = os.path.join(CACHE_FOLDER, url.split('/')[-1])
     pid_file = os.path.join(CACHE_FOLDER, "pid-" + str(port))
@@ -41,7 +41,14 @@ def run(command, port):
 
 
 def run_jar(jar_path, port, pid_file, console_mode):
-    JAVA_HOME=os.environ['JAVA_HOME']
+    # Check if JAVA_HOME is set 
+    if 'JAVA_HOME' not in os.environ:
+        # Set JAVA_HOME to the default location by calling the java_home process
+        JAVA_HOME = subprocess.check_output(['/usr/libexec/java_home']).decode('utf-8').strip()
+    else:
+        JAVA_HOME=os.environ['JAVA_HOME']
+    
+    # Execute the command
     if console_mode:
         proc = subprocess.call([JAVA_HOME+"/bin/java", "-jar", jar_path, "--port", str(port) ], cwd=SCRIPT_FOLDER)
     else:
